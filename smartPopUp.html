@@ -1,0 +1,118 @@
+
+<!-- THIS IS YOUR TARGET FORM -->
+<!-- IN MY CASE AN ACTIVECAMPAIGN OPTIN FORM -->
+
+<!-- 10 Off Optin starts -->
+<div style="display: none;" id="ten-off">
+  <div class="_form_3"></div><script src="https://kinetika.activehosted.com/f/embed.php?id=3" type="text/javascript" charset="utf-8"></script>
+</div>
+<a data-fancybox data-src="#ten-off" href="javascript:;"></a>
+<!-- 10 Off Optin ends -->
+
+<script type="text/javascript">
+// ============================================================================
+//                           Welcome PopUp Widget
+// ----------------------------------------------------------------------------
+
+function tenOffPopup() {
+    // Prevents opening chain because of scrolling
+    var showModal_tenOff = true
+
+    // ====== Helper functions =================================
+    function setFlagObject(actionBool){
+      localStorage.setItem('showModal_tenOff', JSON.stringify({date: Date.now(), action: actionBool}))
+
+      return false
+    };
+
+    function parseFlagObject(){
+      return JSON.parse(localStorage.getItem('showModal_tenOff'));
+    };
+
+    function lookNextDay() {
+      var currentDate  = new Date(Date.now());
+      var curretDay    = currentDate.getDay();
+      var currentMonth = currentDate.getMonth();
+      var currentYear  = currentDate.getYear();
+
+      var flagObject  = parseFlagObject();
+      var storedDate  = new Date(flagObject.date);
+      var storedDay   = storedDate.getDay();
+      var storedMonth = storedDate.getMonth();
+      var storedYear  = storedDate.getYear();
+
+      return curretDay > storedDay || (curretDay < storedDay && currentMonth > storedMonth && currentYear >= storedYear)
+    };
+
+    var supportsLocalStorage = function supports_html5_storage() {
+      try {
+        return 'localStorage' in window && window['localStorage'] !== null;
+      } catch (e) {
+        return false;
+      }
+    }();
+    // ======================================================
+
+    // ====== Open Modal Once on Scroll + TimeOut ===========
+    var openModal = function(){
+      $(window).on('scroll', function(){
+        if (showModal_tenOff){
+          showModal_tenOff = false
+          setTimeout(function(){
+            $.fancybox.open({
+              src  : '#ten-off',
+              type : 'inline',
+              opts : {
+                beforeShow : function() {
+                  $('#_form_3_submit').on('click', function(){
+                    localStorage.setItem('registeredEmail', 'true')
+                    console.info('Modal should never open again.');
+                  })
+                  setFlagObject(false);
+                  console.info('Modal should open tomorrow. Or never.');
+                },
+                afterClose : function() {
+                  // Needed to wait to add the css to body.
+                  setTimeout(function(){
+                    var targetHeight = $($('#fsb_container').children()[0]).height();
+                    $('body').css('padding-top', targetHeight+'px')
+                  })
+                }
+              }
+            });
+          }, 3000)
+        }
+      });
+    };
+    // =====================================================
+
+    // ====== Logic to Open Modal ==========================
+    if(supportsLocalStorage){
+      if(localStorage.getItem('showModal_tenOff') == null){
+        console.log('FIRST TIME SET UP!! - Lauching...')
+        setFlagObject(true);
+      }else if ((lookNextDay() && localStorage.getItem('registeredEmail') == null)) {
+        console.log('NEXT DAY AND NO REGISTERED UPDATE - Lauching...')
+        setFlagObject(true);
+      }else{
+        console.log('Not Launching...');
+        console.log(localStorage.getItem('registeredEmail'));
+        console.log(localStorage.getItem('showModal_tenOff'));
+      };
+
+      if(parseFlagObject().action){
+        console.log('Opening...');
+        openModal()
+      }
+    }else {
+      // If there is no localStorage enabled opens de modal regardless on every page.
+      console.log('localStorage not available. Launching...');
+      openModal()
+    };
+    // =====================================================
+};
+
+// Execute on Document Ready
+$(tenOffPopup)
+
+</script>
